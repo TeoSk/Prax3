@@ -1,0 +1,67 @@
+case class Pos(x: Int, y: Int)
+case class Color(r: Int, g: Int, b: Int)
+sealed trait Pixel {
+  val pos: Pos
+  val color: Color
+}
+case class TransparentPixel(pos: Pos, color: Color, t: Int) extends Pixel
+case class RGBPixel(pos: Pos, color: Color) extends Pixel
+
+object PixelMatrix {
+  def main(args: Array[String]): Unit = {
+    val dimension = 3
+    val screen =
+      """|0:100,125, 56,200
+         |1:255,  0,  0
+         |2:  0,135,200
+         |3:220, 12,  0,100
+         |4: 45, 97,  0
+         |5:  0,  0,  0
+         |6:  0,  0,  0,0
+         |7:  0,  0,  0
+         |8:255,255,255
+         |""".stripMargin
+
+    val pixels = screen.split("\n").zipWithIndex.map { case (line, index) =>
+      val values = line.split(":")(1).split(",").map(_.trim)
+      val red = values(0).toInt
+      val green = values(1).toInt
+      val blue = values(2).toInt
+      val transparency = if (values.length > 3) values(3).toInt else 0
+
+      val x = index % dimension
+      val y = index / dimension
+      val pos = Pos(x, y)
+      val color = Color(red, green, blue)
+      if(transparency == 0) RGBPixel(pos, color) else TransparentPixel(pos, color, transparency)
+    }
+
+    val matrix = Array.ofDim[Pixel](dimension, dimension)
+    pixels.grouped(dimension).zipWithIndex.foreach { case (row, x) =>
+      row.zipWithIndex.foreach { case (pixel, y) =>
+        matrix(x)(y) = pixel
+      }
+    }
+
+    println("Matrix of pixels:")
+    matrix.foreach( row => {
+      row.foreach(pixel => {
+        pixel match {
+          case TransparentPixel(pos, color, t) => print(s"TransparentPixel(Pos(${pos.x},${pos.y}),Color(${color.r},${color.g},${color.b}),$t)|")
+          case RGBPixel(pos, color) => print(s"RGBPixel(Pos(${pos.x},${pos.y}),Color(${color.r},${color.g},${color.b}))|")
+        }
+      })
+      println()
+    })
+
+    val rowWiseMaxRedPixel = matrix.zipWithIndex.map { case (row, index) =>
+      index -> row.reduceLeft((a, b) => if(a.color.r > b.color.r) a else b)
+    }.toMap
+    println(s"Row wise max red pixel: $rowWiseMaxRedPixel")
+
+    val mostTransparentPixel = matrix.flatten.find(p => p.isInstanceOf[TransparentPixel]).getOrElse(RGBPixel(Pos(0,0),Color(0,0,0)))
+    val mostTransparentPixelPos = mostTransparentPixel.pos
+    println(s"The position of the most transparent pixel is: Pos(${mostTransparentPixelPos.x}, ${mostTransparentPixelPos.y})")
+  }
+}
+
