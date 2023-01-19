@@ -57,11 +57,11 @@ object PixelMatrix {
     val rowWiseMaxRedPixel = matrix.zipWithIndex.map { case (row, index) =>
       index -> row.reduceLeft((a, b) => if(a.color.r > b.color.r) a else b)
     }.toMap
-    println(s"Row wise max red pixel: $rowWiseMaxRedPixel")
+    println(s"Most red pixel: $rowWiseMaxRedPixel")
 
     val mostTransparentPixel = matrix.flatten.find(p => p.isInstanceOf[TransparentPixel]).getOrElse(RGBPixel(Pos(0,0),Color(0,0,0)))
     val mostTransparentPixelPos = mostTransparentPixel.pos
-    println(s"The position of the most transparent pixel is: Pos(${mostTransparentPixelPos.x}, ${mostTransparentPixelPos.y})")
+    println(s"Most transparent: Pos(${mostTransparentPixelPos.x}, ${mostTransparentPixelPos.y})")
   }
 }
 
